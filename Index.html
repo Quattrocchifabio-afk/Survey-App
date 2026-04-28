@@ -1,0 +1,3103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="App per sopralluoghi tecnici Proterco Italia">
+    <title>Proterco Italia - Sopralluoghi Tecnici</title>
+    
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+    
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --heat-primary: #d32f2f;
+            --heat-secondary: #ff6f00;
+            --cool-primary: #0277bd;
+            --cool-secondary: #00bcd4;
+            --success-color: #11998e;
+            --warning-color: #f59e0b;
+            --error-color: #dc2626;
+            --text-primary: #333;
+            --text-secondary: #555;
+            --bg-light: #f8f9fa;
+            --border-color: #e0e0e0;
+            --shadow-sm: 0 4px 15px rgba(0,0,0,0.08);
+            --shadow-md: 0 10px 40px rgba(0,0,0,0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+            padding-bottom: 80px;
+            line-height: 1.5;
+        }
+        
+        body.heat-mode {
+            background: linear-gradient(135deg, var(--heat-primary) 0%, var(--heat-secondary) 100%);
+        }
+        
+        body.cool-mode {
+            background: linear-gradient(135deg, var(--cool-primary) 0%, var(--cool-secondary) 100%);
+        }
+        
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary-color);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+            border-radius: 0 0 var(--radius-sm) 0;
+        }
+        
+        .skip-link:focus {
+            top: 0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            font-size: 3rem;
+        }
+        
+        .header h1 {
+            font-size: clamp(1.5rem, 5vw, 1.8rem);
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 800;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 0.9rem;
+            margin: 5px 0 0 0;
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-md);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card:focus-within {
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .heat-mode .section-title {
+            color: var(--heat-primary);
+        }
+        
+        .cool-mode .section-title {
+            color: var(--cool-primary);
+        }
+        
+        .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            flex-shrink: 0;
+        }
+        
+        .heat-mode .icon {
+            background: linear-gradient(135deg, var(--heat-primary) 0%, var(--heat-secondary) 100%);
+        }
+        
+        .cool-mode .icon {
+            background: linear-gradient(135deg, var(--cool-primary) 0%, var(--cool-secondary) 100%);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .required::after {
+            content: ' *';
+            color: var(--error-color);
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: #fafafa;
+            font-family: inherit;
+            color: var(--text-primary);
+        }
+        
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            background: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .heat-mode input:focus,
+        .heat-mode select:focus,
+        .heat-mode textarea:focus {
+            border-color: var(--heat-primary);
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+        }
+        
+        .cool-mode input:focus,
+        .cool-mode select:focus,
+        .cool-mode textarea:focus {
+            border-color: var(--cool-primary);
+            box-shadow: 0 0 0 3px rgba(2, 119, 189, 0.1);
+        }
+        
+        input:invalid:not(:placeholder-shown),
+        select:invalid:not(:placeholder-shown) {
+            border-color: var(--error-color);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .radio-item,
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .radio-item:hover,
+        .checkbox-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+        
+        .radio-item.selected,
+        .checkbox-item.selected {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+        }
+        
+        .heat-mode .radio-item.selected,
+        .heat-mode .checkbox-item.selected {
+            border-color: var(--heat-primary);
+            background: #ffebee;
+        }
+        
+        .cool-mode .radio-item.selected,
+        .cool-mode .checkbox-item.selected {
+            border-color: var(--cool-primary);
+            background: #e3f2fd;
+        }
+        
+        input[type="radio"],
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-right: 12px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .heat-mode input[type="radio"],
+        .heat-mode input[type="checkbox"] {
+            accent-color: var(--heat-primary);
+        }
+        
+        .cool-mode input[type="radio"],
+        .cool-mode input[type="checkbox"] {
+            accent-color: var(--cool-primary);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .heat-mode .btn-primary {
+            background: linear-gradient(135deg, var(--heat-primary) 0%, var(--heat-secondary) 100%);
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
+        }
+        
+        .cool-mode .btn-primary {
+            background: linear-gradient(135deg, var(--cool-primary) 0%, var(--cool-secondary) 100%);
+            box-shadow: 0 4px 15px rgba(2, 119, 189, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-secondary);
+            border: 2px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #38ef7d 100%);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+        
+        .btn-success:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error-color) 0%, #b91c1c 100%);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .photo-item {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            border: 2px dashed #ccc;
+            transition: var(--transition);
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-item.add {
+            cursor: pointer;
+            background: #f0f4ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-size: 2rem;
+            border-style: dashed;
+        }
+        
+        .heat-mode .photo-item.add {
+            background: #ffebee;
+            border-color: var(--heat-primary);
+            color: var(--heat-primary);
+        }
+        
+        .cool-mode .photo-item.add {
+            background: #e3f2fd;
+            border-color: var(--cool-primary);
+            color: var(--cool-primary);
+        }
+        
+        .photo-item.add:hover {
+            transform: scale(1.05);
+            border-style: solid;
+        }
+        
+        .photo-item .remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 38, 38, 0.9);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s;
+            z-index: 2;
+        }
+        
+        .photo-item .remove:hover {
+            transform: scale(1.1);
+            background: var(--error-color);
+        }
+        
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .type-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 3px solid transparent;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .type-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .type-card.selected {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+            transform: scale(1.02);
+        }
+        
+        .heat-mode .type-card.selected {
+            border-color: var(--heat-primary);
+            background: #ffebee;
+        }
+        
+        .cool-mode .type-card.selected {
+            border-color: var(--cool-primary);
+            background: #e3f2fd;
+        }
+        
+        .type-card .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+            filter: grayscale(0.2);
+            transition: filter 0.3s;
+        }
+        
+        .type-card.selected .emoji,
+        .type-card:hover .emoji {
+            filter: grayscale(0);
+            transform: scale(1.1);
+        }
+        
+        .type-card h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        .type-card p {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .conditional-fields {
+            animation: slideDown 0.3s ease;
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            margin-top: 15px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .heat-mode .conditional-fields {
+            border-left-color: var(--heat-primary);
+            background: #fff5f5;
+        }
+        
+        .cool-mode .conditional-fields {
+            border-left-color: var(--cool-primary);
+            background: #f0f9ff;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .info-badge {
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f4ff;
+            color: var(--primary-color);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .heat-mode .info-badge {
+            background: #ffebee;
+            color: var(--heat-primary);
+            border-color: rgba(211, 47, 47, 0.2);
+        }
+        
+        .cool-mode .info-badge {
+            background: #e3f2fd;
+            color: var(--cool-primary);
+            border-color: rgba(2, 119, 189, 0.2);
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.95);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .heat-mode .spinner {
+            border-top-color: var(--heat-primary);
+        }
+        
+        .cool-mode .spinner {
+            border-top-color: var(--cool-primary);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1001;
+            max-width: 90%;
+            width: 380px;
+            animation: popIn 0.3s ease;
+        }
+        
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--success-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2.5rem;
+            animation: scaleIn 0.5s ease;
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .accessori-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            margin-left: 34px;
+        }
+        
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, background 0.2s;
+            user-select: none;
+        }
+        
+        .qty-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .qty-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .heat-mode .qty-btn {
+            background: var(--heat-primary);
+        }
+        
+        .cool-mode .qty-btn {
+            background: var(--cool-primary);
+        }
+        
+        .qty-input {
+            width: 60px !important;
+            text-align: center;
+            padding: 8px !important;
+            font-weight: 600;
+        }
+        
+        .unit-item {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+        
+        .unit-item:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .heat-mode .unit-item:focus-within {
+            border-color: var(--heat-primary);
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+        }
+        
+        .cool-mode .unit-item:focus-within {
+            border-color: var(--cool-primary);
+            box-shadow: 0 0 0 3px rgba(2, 119, 189, 0.1);
+        }
+        
+        .unit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .heat-mode .unit-header {
+            color: var(--heat-primary);
+        }
+        
+        .cool-mode .unit-header {
+            color: var(--cool-primary);
+        }
+        
+        .pdf-preview-container {
+            width: 100%;
+            margin: 20px 0;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: #f8f9fa;
+            min-height: 300px;
+        }
+        
+        .pdf-preview-container iframe,
+        .pdf-preview-container embed {
+            width: 100%;
+            height: 500px;
+            border: none;
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .pdf-preview-container iframe,
+            .pdf-preview-container embed {
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .pdf-preview-container iframe,
+            .pdf-preview-container embed {
+                height: 350px;
+            }
+        }
+        
+        .pdf-fallback {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .pdf-fallback-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .sub-section-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .cronotermostato-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .option-btn {
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .option-btn:hover {
+            border-color: #bbb;
+            transform: translateY(-2px);
+        }
+        
+        .option-btn.selected {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .heat-mode .option-btn.selected {
+            border-color: var(--heat-primary);
+            background: #ffebee;
+            color: var(--heat-primary);
+        }
+        
+        .cool-mode .option-btn.selected {
+            border-color: var(--cool-primary);
+            background: #e3f2fd;
+            color: var(--cool-primary);
+        }
+        
+        .privacy-box {
+            background: var(--bg-light);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 10px;
+        }
+        
+        .privacy-text {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        
+        .privacy-text a {
+            color: var(--primary-color);
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        
+        .heat-mode .privacy-text a {
+            color: var(--heat-primary);
+        }
+        
+        .cool-mode .privacy-text a {
+            color: var(--cool-primary);
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.85);
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            padding: 12px;
+            font-size: 0.75rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .email-status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .email-status.error {
+            background: #fee2e2;
+            border: 2px solid var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .email-status.success {
+            background: #d1fae5;
+            border: 2px solid var(--success-color);
+            color: #059669;
+        }
+        
+        .email-status.pending {
+            background: #fef3c7;
+            border: 2px solid var(--warning-color);
+            color: #92400e;
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .form-group.has-error input,
+        .form-group.has-error select,
+        .form-group.has-error textarea {
+            border-color: var(--error-color);
+        }
+        
+        .form-group.has-error .error-message {
+            display: block;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: white;
+            z-index: 1002;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .autosave-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 99;
+        }
+        
+        .autosave-indicator.visible {
+            opacity: 1;
+        }
+        
+        .tecnico-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+        
+        .heat-mode .tecnico-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d32f2f' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        }
+        
+        .cool-mode .tecnico-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230277bd' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                padding-bottom: 80px;
+            }
+            
+            .card {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            
+            .type-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .cronotermostato-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        *:focus-visible {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        .heat-mode *:focus-visible {
+            outline-color: var(--heat-primary);
+        }
+        
+        .cool-mode *:focus-visible {
+            outline-color: var(--cool-primary);
+        }
+        
+        button:focus-visible,
+        .type-card:focus-visible,
+        .radio-item:focus-visible,
+        .checkbox-item:focus-visible {
+            outline-offset: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Salta al contenuto principale</a>
+
+<div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<div class="autosave-indicator" id="autosaveIndicator" role="status" aria-live="polite">
+    💾 Salvataggio automatico...
+</div>
+
+<main class="container" id="main-content">
+    <header class="header">
+        <div class="logo-container">
+            <div class="logo-icon" aria-hidden="true">🔧</div>
+            <div>
+                <h1>PROTERCO ITALIA</h1>
+                <p>Sopralluoghi Tecnici - App Mobile</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- SELEZIONE TIPO SOPRALLUOGO -->
+    <section class="card" id="step1" aria-labelledby="step1-title">
+        <h2 class="section-title" id="step1-title">
+            <span class="icon" aria-hidden="true">1</span>
+            Seleziona Tipologia
+        </h2>
+        
+        <div class="type-selector" role="radiogroup" aria-label="Tipologia di sopralluogo">
+            <button type="button" class="type-card" data-type="climatizzazione" role="radio" aria-checked="false" tabindex="0">
+                <span class="emoji" aria-hidden="true">❄️</span>
+                <h3>Climatizzazione</h3>
+                <p>Installazione o sostituzione</p>
+            </button>
+            <button type="button" class="type-card" data-type="riscaldamento" role="radio" aria-checked="false" tabindex="0">
+                <span class="emoji" aria-hidden="true">🔥</span>
+                <h3>Riscaldamento</h3>
+                <p>Sostituzione caldaia</p>
+            </button>
+        </div>
+        
+        <button type="button" class="type-card" data-type="altro" style="margin-top: 10px; width: 100%;" role="radio" aria-checked="false" tabindex="0">
+            <span class="emoji" aria-hidden="true">🔧</span>
+            <h3>Altri Lavori</h3>
+            <p>Manutenzione o interventi speciali</p>
+        </button>
+    </section>
+
+    <!-- FORM CLIMA -->
+    <section class="card hidden" id="form-clima" aria-labelledby="clima-title">
+        <h2 class="section-title" id="clima-title">
+            <span class="icon" aria-hidden="true">❄️</span>
+            Sopralluogo Climatizzazione
+        </h2>
+
+        <form id="climaForm" novalidate>
+            <div class="form-group">
+                <label class="required">Tipo Intervento</label>
+                <div class="radio-group" role="radiogroup" aria-required="true">
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tipo_intervento" value="sostituzione" required>
+                        <span>Sostituzione climatizzatore esistente</span>
+                    </label>
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tipo_intervento" value="nuova" required>
+                        <span>Nuova installazione</span>
+                    </label>
+                </div>
+                <span class="error-message">Seleziona il tipo di intervento</span>
+            </div>
+
+            <div class="form-group hidden" id="nuova-installazione-details" aria-live="polite">
+                <label class="required">Tipo di Impianto</label>
+                <div class="radio-group" role="radiogroup" aria-required="true">
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tipo_impianto" value="monosplit">
+                        <span>Monosplit (1 unità interna)</span>
+                    </label>
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tipo_impianto" value="multisplit">
+                        <span>Multisplit (più unità interne)</span>
+                    </label>
+                </div>
+                
+                <div id="multisplit-details" class="hidden conditional-fields">
+                    <label for="numero_unità">Numero Unità Interne</label>
+                    <select id="numero_unità" name="numero_unità">
+                        <option value="">Seleziona...</option>
+                        <option value="2">2 unità</option>
+                        <option value="3">3 unità</option>
+                        <option value="4">4 unità</option>
+                        <option value="5">5 unità</option>
+                        <option value="6">6 unità</option>
+                        <option value="7">7 unità</option>
+                        <option value="8">8 unità</option>
+                    </select>
+                    <div id="unit-container" style="margin-top: 15px;"></div>
+                </div>
+                
+                <div id="monosplit-details" class="hidden conditional-fields" style="margin-top: 15px;">
+                    <label for="distanza_mono">Distanza Tubazioni Frigorifere (metri)</label>
+                    <input type="number" id="distanza_mono" name="distanza_mono" placeholder="Es. 3" min="0.5" max="50" step="0.5">
+                    
+                    <label for="potenza_mono" style="margin-top: 10px;">Potenza Unità (BTU/h)</label>
+                    <select id="potenza_mono" name="potenza_mono">
+                        <option value="">Seleziona...</option>
+                        <option value="9000">9000 BTU/h</option>
+                        <option value="12000">12000 BTU/h</option>
+                        <option value="18000">18000 BTU/h</option>
+                        <option value="24000">24000 BTU/h</option>
+                        <option value="custom">Altro (note)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Accessori Aggiuntivi</label>
+                <div class="accessori-grid">
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori" value="staffa">
+                        <span>Staffa</span>
+                    </label>
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori" value="supporto_pavimento">
+                        <span>Supporto Pavimento</span>
+                    </label>
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori" value="pompa_condensa">
+                        <span>Pompa Condensa</span>
+                    </label>
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori" value="pompa_nebulizzante">
+                        <span>Pompa Nebulizzante</span>
+                    </label>
+                </div>
+            </div>
+        </form>
+
+        <button type="button" class="btn btn-secondary" onclick="app.backToHome()">← Indietro</button>
+        <button type="button" class="btn btn-primary" onclick="app.goToAnagrafica()">Avanti →</button>
+    </section>
+
+    <!-- FORM RISCALDAMENTO -->
+    <section class="card hidden" id="form-riscaldamento" aria-labelledby="riscaldamento-title">
+        <h2 class="section-title" id="riscaldamento-title">
+            <span class="icon" aria-hidden="true">🔥</span>
+            Sopralluogo Riscaldamento
+        </h2>
+
+        <form id="riscaldamentoForm" novalidate>
+            <div class="form-group">
+                <label for="modello_caldaia" class="required">Modello Caldaia</label>
+                <select id="modello_caldaia" name="modello_caldaia" required>
+                    <option value="">Seleziona modello...</option>
+                    <option value="Semaitek Condens">Semaitek Condens</option>
+                    <option value="Micra 4 Condens">Micra 4 Condens</option>
+                    <option value="Themafast4 Condens">Themafast4 Condens</option>
+                    <option value="Master4 Condens">Master4 Condens</option>
+                    <option value="Opalia C">Opalia C</option>
+                    <option value="Opalia F">Opalia F</option>
+                    <option value="Opalia External">Opalia External</option>
+                </select>
+                <span class="error-message">Seleziona il modello della caldaia</span>
+            </div>
+
+            <div class="form-group">
+                <label for="potenza_kw" class="required">Potenza (kW)</label>
+                <input type="number" id="potenza_kw" name="potenza_kw" placeholder="Es. 24" min="1" max="100" step="0.1" required>
+                <span class="error-message">Inserisci una potenza valida (1-100 kW)</span>
+            </div>
+
+            <div class="form-group">
+                <label class="required">Kit Fumi</label>
+                <div class="radio-group" role="radiogroup" aria-required="true">
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="kit_fumi" value="coassiale" required>
+                        <span>Kit Fumi Coassiale</span>
+                    </label>
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="kit_fumi" value="sdoppiato" required>
+                        <span>Kit Fumi Sdoppiato</span>
+                    </label>
+                </div>
+                
+                <div id="kit-sdoppiato-details" class="hidden conditional-fields" aria-live="polite">
+                    <div class="sub-section-title">Componenti Kit Sdoppiato:</div>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Prolunga 1mt</label>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('prolunga', -1)" aria-label="Diminuisci quantità prolunga">−</button>
+                            <input type="number" id="qty_prolunga" name="qty_prolunga" class="qty-input" value="0" min="0" max="20" readonly aria-label="Quantità prolunga">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('prolunga', 1)" aria-label="Aumenta quantità prolunga">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Curva 90°</label>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('curva90', -1)" aria-label="Diminuisci quantità curva 90">−</button>
+                            <input type="number" id="qty_curva90" name="qty_curva90" class="qty-input" value="0" min="0" max="10" readonly aria-label="Quantità curva 90">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('curva90', 1)" aria-label="Aumenta quantità curva 90">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Curva 45°</label>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('curva45', -1)" aria-label="Diminuisci quantità curva 45">−</button>
+                            <input type="number" id="qty_curva45" name="qty_curva45" class="qty-input" value="0" min="0" max="10" readonly aria-label="Quantità curva 45">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('curva45', 1)" aria-label="Aumenta quantità curva 45">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Griglia Terminale</label>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('griglia', -1)" aria-label="Diminuisci quantità griglia">−</button>
+                            <input type="number" id="qty_griglia" name="qty_griglia" class="qty-input" value="0" min="0" max="5" readonly aria-label="Quantità griglia">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('griglia', 1)" aria-label="Aumenta quantità griglia">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Kit Alzata</label>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('alzata', -1)" aria-label="Diminuisci quantità alzata">−</button>
+                            <input type="number" id="qty_alzata" name="qty_alzata" class="qty-input" value="0" min="0" max="5" readonly aria-label="Quantità alzata">
+                            <button type="button" class="qty-btn" onclick="app.changeQty('alzata', 1)" aria-label="Aumenta quantità alzata">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Accessori</label>
+                <div class="accessori-grid">
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" id="check_cronotermostato" name="has_cronotermostato">
+                        <span>Cronotermostato Seitron</span>
+                    </label>
+                </div>
+                
+                <div id="cronotermostato-options" class="hidden conditional-fields" aria-live="polite">
+                    <div class="sub-section-title">Tipo Cronotermostato:</div>
+                    <div class="cronotermostato-options" role="radiogroup" aria-label="Tipo cronotermostato">
+                        <button type="button" class="option-btn" data-value="giornaliero" role="radio" aria-checked="false">Giornaliero</button>
+                        <button type="button" class="option-btn" data-value="settimanale" role="radio" aria-checked="false">Settimanale</button>
+                        <button type="button" class="option-btn" data-value="radio" role="radio" aria-checked="false">Radio</button>
+                        <button type="button" class="option-btn" data-value="wifi" role="radio" aria-checked="false">WiFi</button>
+                    </div>
+                    <input type="hidden" id="cronotermostato_tipo" name="cronotermostato_tipo" value="">
+                </div>
+                
+                <div class="accessori-grid" style="margin-top: 15px;">
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori_risc" value="kit_flessibili">
+                        <span>Kit Flessibili</span>
+                    </label>
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori_risc" value="neutralizzatore">
+                        <span>Neutralizzatore Condensa</span>
+                    </label>
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori_risc" value="filtro_defangante">
+                        <span>Filtro Defangante</span>
+                    </label>
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false">
+                        <input type="checkbox" name="accessori_risc" value="pompa_rilancio">
+                        <span>Pompa Rilancio Condensa</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="note_idrauliche">Note Accessori Idraulici</label>
+                <textarea id="note_idrauliche" name="note_idrauliche" placeholder="Inserisci qui eventuali accessori idraulici aggiuntivi..." rows="3"></textarea>
+            </div>
+        </form>
+
+        <button type="button" class="btn btn-secondary" onclick="app.backToHome()">← Indietro</button>
+        <button type="button" class="btn btn-primary" onclick="app.goToAnagrafica()">Avanti →</button>
+    </section>
+
+    <!-- FORM ALTRI LAVORI -->
+    <section class="card hidden" id="form-altro" aria-labelledby="altro-title">
+        <h2 class="section-title" id="altro-title">
+            <span class="icon" aria-hidden="true">🔧</span>
+            Altri Lavori
+        </h2>
+
+        <form id="altroForm" novalidate>
+            <div class="form-group">
+                <label for="tipo_lavoro_altro" class="required">Tipo di Lavoro</label>
+                <select id="tipo_lavoro_altro" name="tipo_lavoro_altro" required>
+                    <option value="">Seleziona...</option>
+                    <option value="manutenzione">Manutenzione ordinaria</option>
+                    <option value="riparazione">Riparazione guasto</option>
+                    <option value="installazione">Nuova installazione impianto</option>
+                    <option value="modifica">Modifica impianto esistente</option>
+                    <option value="certificazione">Certificazione/Verifica</option>
+                    <option value="altro">Altro</option>
+                </select>
+                <span class="error-message">Seleziona il tipo di lavoro</span>
+            </div>
+
+            <div class="form-group">
+                <label>Tempo di Esecuzione Stimato</label>
+                <div class="radio-group" role="radiogroup">
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tempo_lavoro" value="mezza_giornata">
+                        <span>Mezza giornata (4h)</span>
+                    </label>
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tempo_lavoro" value="giornata">
+                        <span>Giornata intera (8h)</span>
+                    </label>
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tempo_lavoro" value="piu_giorni">
+                        <span>Più giorni</span>
+                    </label>
+                    <label class="radio-item" tabindex="0" role="radio" aria-checked="false">
+                        <input type="radio" name="tempo_lavoro" value="da_valutare">
+                        <span>Da valutare in sede</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="descrizione_lavoro" class="required">Descrizione Lavoro</label>
+                <textarea id="descrizione_lavoro" name="descrizione_lavoro" placeholder="Descrivi dettagliatamente il lavoro da eseguire..." required rows="4"></textarea>
+                <span class="error-message">Inserisci una descrizione del lavoro</span>
+            </div>
+
+            <div class="form-group">
+                <label for="materiale_necessario">Materiale Necessario</label>
+                <textarea id="materiale_necessario" name="materiale_necessario" placeholder="Elencare eventuale materiale necessario..." rows="3"></textarea>
+            </div>
+        </form>
+
+        <button type="button" class="btn btn-secondary" onclick="app.backToHome()">← Indietro</button>
+        <button type="button" class="btn btn-primary" onclick="app.goToAnagrafica()">Avanti →</button>
+    </section>
+
+    <!-- ANAGRAFICA CLIENTE -->
+    <section class="card hidden" id="form-anagrafica" aria-labelledby="anagrafica-title">
+        <h2 class="section-title" id="anagrafica-title">
+            <span class="icon" aria-hidden="true">👤</span>
+            Dati Cliente e Tecnico
+        </h2>
+
+        <form id="anagraficaForm" novalidate>
+            <div class="form-group">
+                <label for="nome_cliente" class="required">Nome Cliente</label>
+                <input type="text" id="nome_cliente" name="nome_cliente" required autocomplete="name">
+                <span class="error-message">Inserisci il nome del cliente</span>
+            </div>
+
+            <div class="form-group">
+                <label for="indirizzo" class="required">Indirizzo</label>
+                <input type="text" id="indirizzo" name="indirizzo" placeholder="Via, Numero, Città" required autocomplete="street-address">
+                <span class="error-message">Inserisci l'indirizzo completo</span>
+            </div>
+
+            <div class="form-group">
+                <label for="telefono_cliente">Telefono Cliente</label>
+                <input type="tel" id="telefono_cliente" name="telefono_cliente" autocomplete="tel" pattern="[0-9+\s]*">
+            </div>
+
+            <div class="form-group">
+                <label for="email_cliente">Email Cliente</label>
+                <input type="email" id="email_cliente" name="email_cliente" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="nome_tecnico" class="required">Tecnico</label>
+                <select id="nome_tecnico" name="nome_tecnico" required class="tecnico-select">
+                    <option value="">Seleziona tecnico...</option>
+                    <option value="Carlo">Carlo</option>
+                    <option value="Denis">Denis</option>
+                    <option value="Domenico">Domenico</option>
+                    <option value="Mattia">Mattia</option>
+                </select>
+                <span class="error-message">Seleziona il tecnico</span>
+            </div>
+
+            <div class="form-group">
+                <label for="data_sopralluogo" class="required">Data Sopralluogo</label>
+                <input type="date" id="data_sopralluogo" name="data_sopralluogo" required>
+                <span class="error-message">Seleziona la data del sopralluogo</span>
+            </div>
+
+            <div class="form-group">
+                <label for="note_generali">Note Aggiuntive Generali</label>
+                <textarea id="note_generali" name="note_generali" placeholder="Eventuali note aggiuntive..." rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <div class="privacy-box">
+                    <label class="checkbox-item" tabindex="0" role="checkbox" aria-checked="false" style="background: transparent; padding: 0; margin-bottom: 10px;">
+                        <input type="checkbox" id="privacy_consent" name="privacy_consent" required>
+                        <span style="font-weight: 700; color: var(--text-primary);">Consenso Privacy *</span>
+                    </label>
+                    <div class="privacy-text">
+                        Dichiaro di aver letto l'<a href="#" onclick="app.showPrivacyInfo(event)">informativa privacy</a> 
+                        e acconsento al trattamento dei dati personali forniti per le finalità indicate.
+                    </div>
+                    <span class="error-message">Devi accettare l'informativa privacy per proseguire</span>
+                </div>
+            </div>
+        </form>
+
+        <button type="button" class="btn btn-secondary" onclick="app.backToForm()">← Indietro</button>
+        <button type="button" class="btn btn-primary" onclick="app.goToPhotos()">Avanti →</button>
+    </section>
+
+    <!-- FOTO -->
+    <section class="card hidden" id="form-foto" aria-labelledby="foto-title">
+        <h2 class="section-title" id="foto-title">
+            <span class="icon" aria-hidden="true">📷</span>
+            Documentazione Fotografica
+        </h2>
+
+        <div class="info-badge" role="alert">
+            <span aria-hidden="true">📸</span>
+            <span>Scatta foto dell'impianto, locali e dettagli tecnici</span>
+        </div>
+
+        <div class="photo-grid" id="photoGrid" role="list" aria-label="Foto caricate">
+            <button type="button" class="photo-item add" onclick="app.addPhoto()" aria-label="Aggiungi foto">
+                <span aria-hidden="true">+</span>
+            </button>
+        </div>
+
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="app.handlePhoto(this)">
+        <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="app.handlePhoto(this)">
+
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('cameraInput').click()" style="margin-top: 15px;">
+            <span aria-hidden="true">📷</span> Scatta Foto
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('galleryInput').click()">
+            <span aria-hidden="true">🖼️</span> Carica da Galleria
+        </button>
+
+        <button type="button" class="btn btn-secondary" onclick="app.backToAnagrafica()" style="margin-top: 20px;">← Indietro</button>
+        <button type="button" class="btn btn-primary" onclick="app.generatePDF()">
+            <span aria-hidden="true">📄</span> Crea PDF con Anteprima
+        </button>
+    </section>
+
+    <!-- ANTEPRIMA E INVIO -->
+    <section class="card hidden" id="form-preview" aria-labelledby="preview-title">
+        <h2 class="section-title" id="preview-title">
+            <span class="icon" aria-hidden="true">📋</span>
+            Anteprima PDF
+        </h2>
+        
+        <div id="pdf-container"></div>
+        
+        <div class="action-buttons">
+            <button type="button" class="btn btn-secondary" onclick="app.backToPhotos()">← Modifica</button>
+            <button type="button" class="btn btn-success" onclick="app.sendEmail()" id="sendEmailBtn">
+                <span aria-hidden="true">✉️</span> Invia Rapporto via Email
+            </button>
+        </div>
+        
+        <div id="email-status" class="email-status hidden" role="alert" aria-live="polite"></div>
+        
+        <button type="button" class="btn btn-warning" onclick="app.downloadPDF()" style="margin-top: 10px;">
+            <span aria-hidden="true">📥</span> Scarica PDF
+        </button>
+    </section>
+</main>
+
+<!-- FOOTER COPYRIGHT -->
+<footer class="footer" role="contentinfo">
+    © Proterco Italia s.r.l. - Via Due Pini, 23 - 00042 Anzio - Tel 065433501 - www.protercoitalia.it
+</footer>
+
+<!-- LOADING -->
+<div class="loading" id="loading" role="dialog" aria-modal="true" aria-labelledby="loading-text" aria-hidden="true">
+    <div class="spinner" aria-hidden="true"></div>
+    <p style="margin-top: 20px; font-weight: 600;" id="loading-text">Generazione PDF in corso...</p>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-message" id="success" role="dialog" aria-modal="true" aria-labelledby="success-title" aria-hidden="true">
+    <div class="success-icon" aria-hidden="true">✓</div>
+    <h2 id="success-title" style="color: var(--text-primary); margin-bottom: 10px;">Inviato!</h2>
+    <p style="color: #666; margin-bottom: 20px;">Il sopralluogo è stato inviato a<br><strong>protercoitalia@gmail.com</strong></p>
+    <button type="button" class="btn btn-primary" onclick="app.resetApp()">Nuovo Sopralluogo</button>
+</div>
+
+<script>
+/**
+ * Proterco Italia - Sopralluoghi Tecnici
+ * Applicazione PWA per gestione sopralluoghi HVAC
+ * @version 2.5.0 - EmailJS con dati nel corpo, no allegato PDF
+ */
+
+'use strict';
+
+// Configurazione EmailJS
+const EMAILJS_CONFIG = {
+    PUBLIC_KEY: 'mCs0DJYqNd2C6CSfV',
+    SERVICE_ID: 'service_6cv7ip5',
+    TEMPLATE_ID: 'template_4hj1swh'
+};
+
+const app = (function() {
+    const state = {
+        currentType: '',
+        photos: [],
+        formData: {},
+        generatedPDF: null,
+        pdfBlob: null,
+        pdfDataUrl: null,
+        currentStep: 1,
+        isDirty: false,
+        emailSent: false
+    };
+
+    const config = {
+        recipient: 'protercoitalia@gmail.com',
+        maxPhotos: 20,
+        maxFileSize: 10 * 1024 * 1024,
+        debounceDelay: 300
+    };
+
+    const dom = {};
+    
+    function init() {
+        cacheDOM();
+        bindEvents();
+        setupAccessibility();
+        loadSavedData();
+        setDefaultDate();
+        updateProgress();
+        
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+
+    function cacheDOM() {
+        const ids = [
+            'step1', 'form-clima', 'form-riscaldamento', 'form-altro',
+            'form-anagrafica', 'form-foto', 'form-preview', 'loading', 'success',
+            'photoGrid', 'cameraInput', 'galleryInput', 'pdf-container',
+            'email-status', 'progressBar', 'autosaveIndicator', 'unit-container',
+            'nuova-installazione-details', 'multisplit-details', 'monosplit-details',
+            'kit-sdoppiato-details', 'cronotermostato-options', 'sendEmailBtn'
+        ];
+        
+        ids.forEach(id => {
+            dom[id] = document.getElementById(id);
+        });
+        
+        dom.forms = {
+            clima: document.getElementById('climaForm'),
+            riscaldamento: document.getElementById('riscaldamentoForm'),
+            altro: document.getElementById('altroForm'),
+            anagrafica: document.getElementById('anagraficaForm')
+        };
+    }
+
+    function bindEvents() {
+        document.querySelectorAll('.type-card').forEach(card => {
+            card.addEventListener('click', (e) => selectType(card.dataset.type, e));
+            card.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectType(card.dataset.type, e);
+                }
+            });
+        });
+
+        document.querySelectorAll('.radio-item, .checkbox-item').forEach(item => {
+            item.addEventListener('click', () => toggleSelection(item));
+            item.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleSelection(item);
+                }
+            });
+        });
+
+        document.querySelectorAll('input[name="tipo_intervento"]').forEach(radio => {
+            radio.addEventListener('change', handleTipoInterventoChange);
+        });
+
+        document.querySelectorAll('input[name="tipo_impianto"]').forEach(radio => {
+            radio.addEventListener('change', handleTipoImpiantoChange);
+        });
+
+        const numeroUnita = document.getElementById('numero_unità');
+        if (numeroUnita) {
+            numeroUnita.addEventListener('change', generateUnitFields);
+        }
+
+        document.querySelectorAll('input[name="kit_fumi"]').forEach(radio => {
+            radio.addEventListener('change', handleKitFumiChange);
+        });
+
+        const checkCrono = document.getElementById('check_cronotermostato');
+        if (checkCrono) {
+            checkCrono.addEventListener('change', toggleCronoOptions);
+        }
+
+        document.querySelectorAll('.cronotermostato-options .option-btn').forEach(btn => {
+            btn.addEventListener('click', () => selectCronoType(btn));
+        });
+
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('change', debounce(saveFormData, config.debounceDelay));
+            input.addEventListener('input', () => { state.isDirty = true; });
+        });
+    }
+
+    function setupAccessibility() {
+        const modals = [dom.loading, dom.success];
+        modals.forEach(modal => {
+            if (modal) {
+                modal.addEventListener('keydown', trapFocus);
+            }
+        });
+    }
+
+    function trapFocus(e) {
+        if (e.key !== 'Tab') return;
+        
+        const focusable = e.currentTarget.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // ==================== NAVIGAZIONE ====================
+
+    function selectType(type, event) {
+        state.currentType = type;
+        
+        document.querySelectorAll('.type-card').forEach(card => {
+            const isSelected = card.dataset.type === type;
+            card.classList.toggle('selected', isSelected);
+            card.setAttribute('aria-checked', isSelected);
+        });
+        
+        document.body.classList.remove('heat-mode', 'cool-mode');
+        const themeColor = document.querySelector('meta[name="theme-color"]');
+        
+        if (type === 'riscaldamento') {
+            document.body.classList.add('heat-mode');
+            themeColor?.setAttribute('content', '#d32f2f');
+        } else if (type === 'climatizzazione') {
+            document.body.classList.add('cool-mode');
+            themeColor?.setAttribute('content', '#0277bd');
+        } else {
+            themeColor?.setAttribute('content', '#667eea');
+        }
+        
+        setTimeout(() => {
+            hideAllSections();
+            
+            const sectionMap = {
+                'climatizzazione': 'form-clima',
+                'riscaldamento': 'form-riscaldamento',
+                'altro': 'form-altro'
+            };
+            
+            const targetSection = document.getElementById(sectionMap[type]);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            state.currentStep = 2;
+            updateProgress();
+        }, 250);
+    }
+
+    function hideAllSections() {
+        const sections = ['step1', 'form-clima', 'form-riscaldamento', 'form-altro', 
+                         'form-anagrafica', 'form-foto', 'form-preview'];
+        sections.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+    }
+
+    function backToHome() {
+        hideAllSections();
+        dom.step1.classList.remove('hidden');
+        document.body.classList.remove('heat-mode', 'cool-mode');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#667eea');
+        state.currentStep = 1;
+        state.currentType = '';
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToAnagrafica() {
+        if (!validateCurrentForm()) return;
+        
+        collectFormData();
+        
+        hideAllSections();
+        dom['form-anagrafica'].classList.remove('hidden');
+        dom['form-anagrafica'].scrollIntoView({ behavior: 'smooth' });
+        state.currentStep = 3;
+        updateProgress();
+    }
+
+    function backToForm() {
+        hideAllSections();
+        
+        const sectionMap = {
+            'climatizzazione': 'form-clima',
+            'riscaldamento': 'form-riscaldamento',
+            'altro': 'form-altro'
+        };
+        
+        const target = document.getElementById(sectionMap[state.currentType]);
+        if (target) {
+            target.classList.remove('hidden');
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
+        state.currentStep = 2;
+        updateProgress();
+    }
+
+    function goToPhotos() {
+        if (!validateAnagrafica()) return;
+        
+        collectAnagraficaData();
+        
+        hideAllSections();
+        dom['form-foto'].classList.remove('hidden');
+        dom['form-foto'].scrollIntoView({ behavior: 'smooth' });
+        state.currentStep = 4;
+        updateProgress();
+    }
+
+    function backToAnagrafica() {
+        hideAllSections();
+        dom['form-anagrafica'].classList.remove('hidden');
+        dom['form-anagrafica'].scrollIntoView({ behavior: 'smooth' });
+        state.currentStep = 3;
+        updateProgress();
+    }
+
+    function backToPhotos() {
+        dom.emailStatus?.classList.add('hidden');
+        hideAllSections();
+        dom['form-foto'].classList.remove('hidden');
+        dom['form-foto'].scrollIntoView({ behavior: 'smooth' });
+        state.currentStep = 4;
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const progress = (state.currentStep / 5) * 100;
+        if (dom.progressBar) {
+            dom.progressBar.style.width = `${progress}%`;
+            dom.progressBar.setAttribute('aria-valuenow', progress);
+        }
+    }
+
+    // ==================== VALIDAZIONE ====================
+
+    function validateCurrentForm() {
+        const formMap = {
+            'climatizzazione': dom.forms.clima,
+            'riscaldamento': dom.forms.riscaldamento,
+            'altro': dom.forms.altro
+        };
+        
+        const form = formMap[state.currentType];
+        if (!form) return false;
+        
+        let isValid = true;
+        
+        if (state.currentType === 'climatizzazione') {
+            isValid = validateClimaForm(form);
+        } else if (state.currentType === 'riscaldamento') {
+            isValid = validateRiscaldamentoForm(form);
+        } else {
+            isValid = validateAltroForm(form);
+        }
+        
+        return isValid;
+    }
+
+    function validateClimaForm(form) {
+        let isValid = true;
+        
+        const tipoIntervento = form.querySelector('input[name="tipo_intervento"]:checked');
+        if (!tipoIntervento) {
+            showFieldError(form.querySelector('[name="tipo_intervento"]').closest('.form-group'));
+            isValid = false;
+        }
+        
+        if (tipoIntervento?.value === 'nuova') {
+            const tipoImpianto = form.querySelector('input[name="tipo_impianto"]:checked');
+            if (!tipoImpianto) {
+                showFieldError(form.querySelector('[name="tipo_impianto"]').closest('.form-group'));
+                isValid = false;
+            } else if (tipoImpianto.value === 'multisplit') {
+                const numUnita = document.getElementById('numero_unità');
+                if (!numUnita?.value) {
+                    showFieldError(numUnita.closest('.form-group'));
+                    isValid = false;
+                }
+            }
+        }
+        
+        return isValid;
+    }
+
+    function validateRiscaldamentoForm(form) {
+        let isValid = true;
+        
+        const modello = form.querySelector('#modello_caldaia');
+        if (!modello?.value) {
+            showFieldError(modello.closest('.form-group'));
+            isValid = false;
+        }
+        
+        const potenza = form.querySelector('#potenza_kw');
+        if (!potenza?.value || parseFloat(potenza.value) <= 0) {
+            showFieldError(potenza.closest('.form-group'));
+            isValid = false;
+        }
+        
+        const kitFumi = form.querySelector('input[name="kit_fumi"]:checked');
+        if (!kitFumi) {
+            showFieldError(form.querySelector('[name="kit_fumi"]').closest('.form-group'));
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateAltroForm(form) {
+        let isValid = true;
+        
+        const tipoLavoro = form.querySelector('#tipo_lavoro_altro');
+        if (!tipoLavoro?.value) {
+            showFieldError(tipoLavoro.closest('.form-group'));
+            isValid = false;
+        }
+        
+        const descrizione = form.querySelector('#descrizione_lavoro');
+        if (!descrizione?.value.trim()) {
+            showFieldError(descrizione.closest('.form-group'));
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function validateAnagrafica() {
+        const form = dom.forms.anagrafica;
+        let isValid = true;
+        
+        const required = ['nome_cliente', 'indirizzo', 'nome_tecnico', 'data_sopralluogo'];
+        
+        required.forEach(fieldId => {
+            const field = form.querySelector(`#${fieldId}`);
+            if (!field?.value.trim()) {
+                showFieldError(field.closest('.form-group'));
+                isValid = false;
+            }
+        });
+        
+        const privacy = form.querySelector('#privacy_consent');
+        if (!privacy?.checked) {
+            showFieldError(privacy.closest('.form-group'));
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    function showFieldError(formGroup) {
+        if (!formGroup) return;
+        formGroup.classList.add('has-error');
+        
+        const input = formGroup.querySelector('input, select, textarea');
+        if (input) {
+            const removeError = () => formGroup.classList.remove('has-error');
+            input.addEventListener('input', removeError, { once: true });
+            setTimeout(removeError, 3000);
+        }
+    }
+
+    // ==================== COLLEZIONE DATI ====================
+
+    function collectFormData() {
+        if (state.currentType === 'climatizzazione') {
+            collectClimaData();
+        } else if (state.currentType === 'riscaldamento') {
+            collectRiscaldamentoData();
+        } else {
+            collectAltroData();
+        }
+    }
+
+    function collectClimaData() {
+        const form = dom.forms.clima;
+        const tipoIntervento = form.querySelector('input[name="tipo_intervento"]:checked')?.value;
+        
+        state.formData.clima = {
+            tipo_intervento: tipoIntervento,
+            accessori: Array.from(form.querySelectorAll('input[name="accessori"]:checked')).map(cb => cb.value)
+        };
+        
+        if (tipoIntervento === 'nuova') {
+            const tipoImpianto = form.querySelector('input[name="tipo_impianto"]:checked')?.value;
+            state.formData.clima.tipo_impianto = tipoImpianto;
+            
+            if (tipoImpianto === 'monosplit') {
+                state.formData.clima.distanza = document.getElementById('distanza_mono')?.value;
+                state.formData.clima.potenza = document.getElementById('potenza_mono')?.value;
+            } else if (tipoImpianto === 'multisplit') {
+                const numUnita = document.getElementById('numero_unità')?.value;
+                state.formData.clima.numero_unità = numUnita;
+                state.formData.clima.unita = [];
+                
+                document.querySelectorAll('.unit-item').forEach((unit, idx) => {
+                    state.formData.clima.unita.push({
+                        numero: idx + 1,
+                        distanza: unit.querySelector('.distanza-unita')?.value,
+                        potenza: unit.querySelector('.potenza-unita')?.value
+                    });
+                });
+            }
+        }
+    }
+
+    function collectRiscaldamentoData() {
+        const form = dom.forms.riscaldamento;
+        
+        state.formData.riscaldamento = {
+            modello: document.getElementById('modello_caldaia')?.value,
+            potenza_kw: document.getElementById('potenza_kw')?.value,
+            kit_fumi: form.querySelector('input[name="kit_fumi"]:checked')?.value,
+            accessori: Array.from(form.querySelectorAll('input[name="accessori_risc"]:checked')).map(cb => cb.value),
+            note_idrauliche: document.getElementById('note_idrauliche')?.value
+        };
+        
+        const cronoCheckbox = document.getElementById('check_cronotermostato');
+        if (cronoCheckbox?.checked) {
+            const cronoTipo = document.getElementById('cronotermostato_tipo')?.value;
+            if (cronoTipo) {
+                state.formData.riscaldamento.cronotermostato = cronoTipo;
+            }
+        }
+        
+        if (state.formData.riscaldamento.kit_fumi === 'sdoppiato') {
+            state.formData.riscaldamento.kit_sdoppiato = {
+                prolunga: document.getElementById('qty_prolunga')?.value || '0',
+                curva90: document.getElementById('qty_curva90')?.value || '0',
+                curva45: document.getElementById('qty_curva45')?.value || '0',
+                griglia: document.getElementById('qty_griglia')?.value || '0',
+                alzata: document.getElementById('qty_alzata')?.value || '0'
+            };
+        }
+    }
+
+    function collectAltroData() {
+        const form = dom.forms.altro;
+        
+        state.formData.altro = {
+            tipo_lavoro: document.getElementById('tipo_lavoro_altro')?.value,
+            tempo: form.querySelector('input[name="tempo_lavoro"]:checked')?.value,
+            descrizione: document.getElementById('descrizione_lavoro')?.value,
+            materiale: document.getElementById('materiale_necessario')?.value
+        };
+    }
+
+    function collectAnagraficaData() {
+        const form = dom.forms.anagrafica;
+        
+        state.formData.anagrafica = {
+            nome_cliente: document.getElementById('nome_cliente')?.value.trim(),
+            indirizzo: document.getElementById('indirizzo')?.value.trim(),
+            telefono: document.getElementById('telefono_cliente')?.value.trim(),
+            email: document.getElementById('email_cliente')?.value.trim(),
+            tecnico: document.getElementById('nome_tecnico')?.value,
+            data: document.getElementById('data_sopralluogo')?.value,
+            note: document.getElementById('note_generali')?.value.trim(),
+            privacy_consent: true
+        };
+    }
+
+    // ==================== UI HELPERS ====================
+
+    function toggleSelection(element) {
+        const input = element.querySelector('input');
+        if (!input) return;
+        
+        if (input.type === 'radio') {
+            const name = input.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                const item = radio.closest('.radio-item, .checkbox-item');
+                if (item) {
+                    item.classList.remove('selected');
+                    item.setAttribute('aria-checked', 'false');
+                }
+            });
+            input.checked = true;
+        } else {
+            input.checked = !input.checked;
+        }
+        
+        element.classList.toggle('selected', input.checked);
+        element.setAttribute('aria-checked', input.checked);
+        
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function handleTipoInterventoChange(e) {
+        const details = document.getElementById('nuova-installazione-details');
+        if (!details) return;
+        
+        if (e.target.value === 'nuova') {
+            details.classList.remove('hidden');
+        } else {
+            details.classList.add('hidden');
+            document.getElementById('multisplit-details')?.classList.add('hidden');
+            document.getElementById('monosplit-details')?.classList.add('hidden');
+        }
+    }
+
+    function handleTipoImpiantoChange(e) {
+        const isMultisplit = e.target.value === 'multisplit';
+        document.getElementById('multisplit-details')?.classList.toggle('hidden', !isMultisplit);
+        document.getElementById('monosplit-details')?.classList.toggle('hidden', isMultisplit);
+    }
+
+    function generateUnitFields() {
+        const numUnits = parseInt(document.getElementById('numero_unità')?.value) || 0;
+        const container = document.getElementById('unit-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        for (let i = 1; i <= numUnits; i++) {
+            const unitDiv = document.createElement('div');
+            unitDiv.className = 'unit-item';
+            unitDiv.innerHTML = `
+                <div class="unit-header">
+                    <span>Unità Interna ${i}</span>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="distanza_unit_${i}">Distanza Tubazioni (metri)</label>
+                    <input type="number" id="distanza_unit_${i}" class="distanza-unita" data-unit="${i}" 
+                           placeholder="Es. 3" min="0.5" max="30" step="0.5" aria-label="Distanza unità ${i}">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="potenza_unit_${i}">Potenza (BTU/h)</label>
+                    <select id="potenza_unit_${i}" class="potenza-unita" data-unit="${i}" aria-label="Potenza unità ${i}">
+                        <option value="">Seleziona...</option>
+                        <option value="9000">9000 BTU/h</option>
+                        <option value="12000">12000 BTU/h</option>
+                        <option value="18000">18000 BTU/h</option>
+                        <option value="24000">24000 BTU/h</option>
+                        <option value="custom">Altro (note)</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(unitDiv);
+        }
+    }
+
+    function handleKitFumiChange(e) {
+        const details = document.getElementById('kit-sdoppiato-details');
+        if (details) {
+            details.classList.toggle('hidden', e.target.value !== 'sdoppiato');
+        }
+    }
+
+    function changeQty(item, delta) {
+        const input = document.getElementById(`qty_${item}`);
+        if (!input) return;
+        
+        let val = parseInt(input.value) || 0;
+        val += delta;
+        
+        const max = parseInt(input.getAttribute('max')) || 99;
+        const min = parseInt(input.getAttribute('min')) || 0;
+        
+        val = Math.max(min, Math.min(val, max));
+        input.value = val;
+        
+        state.isDirty = true;
+        debounce(saveFormData, config.debounceDelay)();
+    }
+
+    function toggleCronoOptions() {
+        const checkbox = document.getElementById('check_cronotermostato');
+        const optionsDiv = document.getElementById('cronotermostato-options');
+        
+        if (checkbox && optionsDiv) {
+            const isChecked = checkbox.checked;
+            optionsDiv.classList.toggle('hidden', !isChecked);
+            
+            if (!isChecked) {
+                document.querySelectorAll('.cronotermostato-options .option-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    btn.setAttribute('aria-checked', 'false');
+                });
+                const hidden = document.getElementById('cronotermostato_tipo');
+                if (hidden) hidden.value = '';
+            }
+        }
+    }
+
+    function selectCronoType(btn) {
+        document.querySelectorAll('.cronotermostato-options .option-btn').forEach(b => {
+            b.classList.remove('selected');
+            b.setAttribute('aria-checked', 'false');
+        });
+        
+        btn.classList.add('selected');
+        btn.setAttribute('aria-checked', 'true');
+        
+        const hidden = document.getElementById('cronotermostato_tipo');
+        if (hidden) hidden.value = btn.dataset.value;
+    }
+
+    // ==================== FOTO ====================
+
+    function addPhoto() {
+        if (state.photos.length >= config.maxPhotos) {
+            alert(`Puoi caricare massimo ${config.maxPhotos} foto`);
+            return;
+        }
+        
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            const choice = confirm('Vuoi scattare una foto ora?\nOK = Camera\nAnnulla = Galleria');
+            if (choice) {
+                dom.cameraInput?.click();
+            } else {
+                dom.galleryInput?.click();
+            }
+        } else {
+            dom.galleryInput?.click();
+        }
+    }
+
+    function handlePhoto(input) {
+        if (!input.files?.[0]) return;
+        
+        const file = input.files[0];
+        
+        if (file.size > config.maxFileSize) {
+            alert('File troppo grande. Massimo 10MB.');
+            input.value = '';
+            return;
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Seleziona un file immagine valido');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            state.photos.push(e.target.result);
+            updatePhotoGrid();
+            state.isDirty = true;
+            saveFormData();
+        };
+        reader.onerror = () => {
+            alert('Errore durante la lettura del file');
+        };
+        reader.readAsDataURL(file);
+        
+        input.value = '';
+    }
+
+    function updatePhotoGrid() {
+        const grid = dom.photoGrid;
+        if (!grid) return;
+        
+        grid.innerHTML = '';
+        
+        state.photos.forEach((photo, index) => {
+            const div = document.createElement('div');
+            div.className = 'photo-item';
+            div.setAttribute('role', 'listitem');
+            div.innerHTML = `
+                <img src="${photo}" alt="Foto ${index + 1}" loading="lazy">
+                <button type="button" class="remove" onclick="app.removePhoto(${index})" 
+                        aria-label="Rimuovi foto ${index + 1}">×</button>
+            `;
+            grid.appendChild(div);
+        });
+        
+        if (state.photos.length < config.maxPhotos) {
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'photo-item add';
+            addBtn.setAttribute('aria-label', 'Aggiungi foto');
+            addBtn.innerHTML = '<span aria-hidden="true">+</span>';
+            addBtn.onclick = addPhoto;
+            grid.appendChild(addBtn);
+        }
+    }
+
+    function removePhoto(index) {
+        state.photos.splice(index, 1);
+        updatePhotoGrid();
+        state.isDirty = true;
+        saveFormData();
+    }
+
+    // ==================== PDF ====================
+
+    async function generatePDF() {
+        showLoading('Generazione PDF in corso...');
+        
+        try {
+            const { jsPDF } = window.jspdf;
+            if (!jsPDF) throw new Error('Libreria PDF non caricata');
+            
+            const doc = new jsPDF();
+            const isHeat = state.currentType === 'riscaldamento';
+            const primaryColor = isHeat ? [211, 47, 47] : (state.currentType === 'climatizzazione' ? [2, 119, 189] : [102, 126, 234]);
+            
+            // Intestazione semplificata - solo "Sopralluogo Tecnico"
+            doc.setFillColor(...primaryColor);
+            doc.rect(0, 0, 210, 35, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.text('Sopralluogo Tecnico', 105, 22, { align: 'center' });
+            
+            let y = 45;
+            
+            // Info generali
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('INFORMAZIONI GENERALI', 20, y);
+            y += 10;
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            
+            const info = state.formData.anagrafica;
+            const infoLines = [
+                `Cliente: ${info.nome_cliente}`,
+                `Indirizzo: ${info.indirizzo}`,
+                `Telefono: ${info.telefono || 'N/D'}`,
+                `Email: ${info.email || 'N/D'}`,
+                `Data: ${info.data}`,
+                `Tecnico: ${info.tecnico}`,
+                `Consenso Privacy: Acquisito`
+            ];
+            
+            infoLines.forEach(line => {
+                if (y > 280) { doc.addPage(); y = 20; }
+                doc.text(line, 20, y);
+                y += 7;
+            });
+            y += 8;
+            
+            // Dettagli tecnici
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(...primaryColor);
+            
+            if (state.currentType === 'climatizzazione') {
+                y = renderClimaPDF(doc, y, primaryColor);
+            } else if (state.currentType === 'riscaldamento') {
+                y = renderRiscaldamentoPDF(doc, y, primaryColor);
+            } else {
+                y = renderAltroPDF(doc, y, primaryColor);
+            }
+            
+            // Note generali
+            if (info.note) {
+                if (y > 250) { doc.addPage(); y = 20; }
+                y += 5;
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(...primaryColor);
+                doc.text('NOTE GENERALI', 20, y);
+                y += 10;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'normal');
+                const splitNote = doc.splitTextToSize(info.note, 170);
+                doc.text(splitNote, 20, y);
+                y += splitNote.length * 7;
+            }
+            
+            // Foto
+            if (state.photos.length > 0) {
+                y = renderPhotosPDF(doc, y, primaryColor);
+            }
+            
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+                doc.text('© Proterco Italia s.r.l. - Via Due Pini, 23 - 00042 Anzio - Tel 065433501 - www.protercoitalia.it', 
+                        105, 292, { align: 'center' });
+            }
+            
+            // Salva PDF
+            state.generatedPDF = doc;
+            state.pdfBlob = doc.output('blob');
+            state.pdfDataUrl = doc.output('datauristring');
+            
+            // Mostra anteprima
+            showPDFPreview();
+            
+            hideAllSections();
+            dom['form-preview'].classList.remove('hidden');
+            dom['form-preview'].scrollIntoView({ behavior: 'smooth' });
+            state.currentStep = 5;
+            updateProgress();
+            
+        } catch (error) {
+            console.error('Errore generazione PDF:', error);
+            alert('Errore durante la generazione del PDF: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function showPDFPreview() {
+        const container = dom.pdfContainer;
+        if (!container || !state.pdfDataUrl) return;
+        
+        const blobUrl = URL.createObjectURL(state.pdfBlob);
+        
+        const previewHTML = `
+            <div class="pdf-preview-container">
+                <object 
+                    data="${blobUrl}" 
+                    type="application/pdf" 
+                    width="100%" 
+                    height="500px"
+                    style="min-height: 400px;">
+                    <embed 
+                        src="${blobUrl}" 
+                        type="application/pdf" 
+                        width="100%" 
+                        height="500px"
+                        style="min-height: 400px;" />
+                    <div class="pdf-fallback">
+                        <div class="pdf-fallback-icon">📄</div>
+                        <p><strong>Anteprima non disponibile</strong></p>
+                        <p>Scarica il PDF per visualizzarlo</p>
+                        <button type="button" class="btn btn-primary" onclick="app.downloadPDF()" style="margin-top: 10px;">
+                            Scarica PDF
+                        </button>
+                    </div>
+                </object>
+            </div>
+        `;
+        
+        container.innerHTML = previewHTML;
+        state.currentBlobUrl = blobUrl;
+    }
+
+    function renderClimaPDF(doc, y, primaryColor) {
+        doc.text('IMPIANTO DI CLIMATIZZAZIONE', 20, y);
+        y += 10;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        
+        const data = state.formData.clima;
+        doc.text(`Tipo intervento: ${data.tipo_intervento === 'sostituzione' ? 'Sostituzione' : 'Nuova installazione'}`, 20, y);
+        y += 7;
+        
+        if (data.tipo_intervento === 'nuova') {
+            doc.text(`Tipo impianto: ${data.tipo_impianto === 'monosplit' ? 'Monosplit' : 'Multisplit'}`, 20, y);
+            y += 7;
+            
+            if (data.tipo_impianto === 'monosplit') {
+                doc.text(`Distanza tubazioni: ${data.distanza || 'N/D'} metri`, 20, y);
+                y += 7;
+                doc.text(`Potenza: ${data.potenza || 'N/D'} BTU/h`, 20, y);
+                y += 7;
+            } else if (data.unita) {
+                doc.text(`Numero unità interne: ${data.numero_unità}`, 20, y);
+                y += 7;
+                data.unita.forEach(unita => {
+                    if (y > 270) { doc.addPage(); y = 20; }
+                    doc.text(`  Unità ${unita.numero}: ${unita.distanza || 'N/D'}m - ${unita.potenza || 'N/D'} BTU/h`, 20, y);
+                    y += 6;
+                });
+                y += 2;
+            }
+        }
+        
+        if (data.accessori?.length > 0) {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(`Accessori: ${data.accessori.join(', ')}`, 20, y);
+            y += 7;
+        }
+        
+        return y;
+    }
+
+    function renderRiscaldamentoPDF(doc, y, primaryColor) {
+        doc.text('IMPIANTO DI RISCALDAMENTO', 20, y);
+        y += 10;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        
+        const data = state.formData.riscaldamento;
+        doc.text(`Modello caldaia: ${data.modello}`, 20, y);
+        y += 7;
+        doc.text(`Potenza: ${data.potenza_kw} kW`, 20, y);
+        y += 7;
+        doc.text(`Kit fumi: ${data.kit_fumi === 'coassiale' ? 'Coassiale' : 'Sdoppiato'}`, 20, y);
+        y += 7;
+        
+        if (data.kit_fumi === 'sdoppiato' && data.kit_sdoppiato) {
+            if (y > 250) { doc.addPage(); y = 20; }
+            const kit = data.kit_sdoppiato;
+            doc.text('Componenti kit sdoppiato:', 20, y);
+            y += 6;
+            ['prolunga', 'curva90', 'curva45', 'griglia', 'alzata'].forEach(key => {
+                const val = parseInt(kit[key]) || 0;
+                if (val > 0) {
+                    const label = {
+                        prolunga: 'Prolunga 1mt',
+                        curva90: 'Curva 90°',
+                        curva45: 'Curva 45°',
+                        griglia: 'Griglia Terminale',
+                        alzata: 'Kit Alzata'
+                    }[key];
+                    doc.text(`  - ${label}: ${val} pz`, 20, y);
+                    y += 6;
+                }
+            });
+            y += 2;
+        }
+        
+        if (data.cronotermostato) {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(`Cronotermostato Seitron: ${data.cronotermostato}`, 20, y);
+            y += 7;
+        }
+        
+        if (data.accessori?.length > 0) {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(`Altri accessori: ${data.accessori.join(', ')}`, 20, y);
+            y += 7;
+        }
+        
+        if (data.note_idrauliche) {
+            if (y > 250) { doc.addPage(); y = 20; }
+            doc.text('Note accessori idraulici:', 20, y);
+            y += 6;
+            const splitNote = doc.splitTextToSize(data.note_idrauliche, 170);
+            doc.text(splitNote, 20, y);
+            y += splitNote.length * 6;
+        }
+        
+        return y;
+    }
+
+    function renderAltroPDF(doc, y, primaryColor) {
+        doc.text('ALTRI LAVORI', 20, y);
+        y += 10;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        
+        const data = state.formData.altro;
+        const tipoLabels = {
+            manutenzione: 'Manutenzione ordinaria',
+            riparazione: 'Riparazione guasto',
+            installazione: 'Nuova installazione impianto',
+            modifica: 'Modifica impianto esistente',
+            certificazione: 'Certificazione/Verifica',
+            altro: 'Altro'
+        };
+        
+        doc.text(`Tipo lavoro: ${tipoLabels[data.tipo_lavoro] || data.tipo_lavoro}`, 20, y);
+        y += 7;
+        
+        if (data.tempo) {
+            const tempoLabels = {
+                mezza_giornata: 'Mezza giornata (4h)',
+                giornata: 'Giornata intera (8h)',
+                piu_giorni: 'Più giorni',
+                da_valutare: 'Da valutare in sede'
+            };
+            doc.text(`Tempo stimato: ${tempoLabels[data.tempo]}`, 20, y);
+            y += 7;
+        }
+        
+        doc.text('Descrizione:', 20, y);
+        y += 6;
+        const splitDesc = doc.splitTextToSize(data.descrizione, 170);
+        doc.text(splitDesc, 20, y);
+        y += splitDesc.length * 6 + 2;
+        
+        if (data.materiale) {
+            if (y > 250) { doc.addPage(); y = 20; }
+            doc.text('Materiale necessario:', 20, y);
+            y += 6;
+            const splitMat = doc.splitTextToSize(data.materiale, 170);
+            doc.text(splitMat, 20, y);
+            y += splitMat.length * 6;
+        }
+        
+        return y;
+    }
+
+    function renderPhotosPDF(doc, y, primaryColor) {
+        if (y > 200) { doc.addPage(); y = 20; }
+        
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...primaryColor);
+        doc.text('DOCUMENTAZIONE FOTOGRAFICA', 20, y);
+        y += 15;
+        
+        let xPos = 20;
+        const imgWidth = 85;
+        const imgHeight = 60;
+        
+        for (let i = 0; i < state.photos.length; i++) {
+            if (y + imgHeight > 280) {
+                doc.addPage();
+                y = 20;
+                xPos = 20;
+            }
+            
+            try {
+                doc.addImage(state.photos[i], 'JPEG', xPos, y, imgWidth, imgHeight);
+            } catch(e) {
+                console.warn(`Errore caricamento foto ${i+1}:`, e);
+            }
+            
+            if (xPos === 20) {
+                xPos = 105;
+            } else {
+                xPos = 20;
+                y += imgHeight + 10;
+            }
+        }
+        
+        return y;
+    }
+
+    // ==================== EMAILJS: INVIO DATI NEL CORPO ====================
+    async function sendEmail() {
+        if (state.emailSent) {
+            showEmailStatus('Email già inviata. Per inviare di nuovo, ricomincia il sopralluogo.', 'pending');
+            return;
+        }
+        
+        showLoading('Invio email in corso...');
+        
+        const btn = dom.sendEmailBtn;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span> Invio in corso...';
+        }
+        
+        try {
+            // Prepara il messaggio completo con tutti i dati del sopralluogo
+            const emailBody = formatEmailBody();
+            const info = state.formData.anagrafica;
+            
+            // Parametri per EmailJS - tutto nel corpo del messaggio
+            const templateParams = {
+                to_email: config.recipient,
+                from_name: 'Proterco Sopralluoghi',
+                subject: `Sopralluogo ${info.nome_cliente} - ${info.tecnico} - ${info.data}`,
+                message: emailBody,
+                // Parametri aggiuntivi per eventuali variabili nel template
+                cliente: info.nome_cliente,
+                indirizzo: info.indirizzo,
+                tecnico: info.tecnico,
+                data: info.data,
+                tipo: state.currentType.toUpperCase()
+            };
+            
+            // Invia con EmailJS (gratuito, nessun allegato)
+            const result = await emailjs.send(
+                EMAILJS_CONFIG.SERVICE_ID, 
+                EMAILJS_CONFIG.TEMPLATE_ID, 
+                templateParams
+            );
+            
+            if (result.status === 200) {
+                state.emailSent = true;
+                showEmailStatus('✅ Rapporto inviato con successo!', 'success');
+                showSuccess();
+            } else {
+                throw new Error('Risposta non valida dal server');
+            }
+            
+        } catch (error) {
+            console.error('Errore invio email:', error);
+            showEmailStatus(`❌ Invio fallito: ${error.message}. Scarica il PDF e invialo manualmente.`, 'error');
+            
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span aria-hidden="true">✉️</span> Riprova Invio';
+            }
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Formatta tutti i dati del sopralluogo in testo per l'email
+    function formatEmailBody() {
+        const info = state.formData.anagrafica;
+        const lines = [];
+        
+        lines.push('═══════════════════════════════════════');
+        lines.push('         SOPRALLUOGO TECNICO');
+        lines.push('═══════════════════════════════════════');
+        lines.push('');
+        lines.push('📋 INFORMAZIONI GENERALI');
+        lines.push('─────────────────────────────────────');
+        lines.push(`Cliente: ${info.nome_cliente}`);
+        lines.push(`Indirizzo: ${info.indirizzo}`);
+        lines.push(`Telefono: ${info.telefono || 'N/D'}`);
+        lines.push(`Email: ${info.email || 'N/D'}`);
+        lines.push(`Data sopralluogo: ${info.data}`);
+        lines.push(`Tecnico: ${info.tecnico}`);
+        lines.push(`Consenso Privacy: ✓ Acquisito`);
+        lines.push('');
+        
+        // Dettagli tecnici in base al tipo
+        if (state.currentType === 'climatizzazione') {
+            lines.push(...formatClimaEmail());
+        } else if (state.currentType === 'riscaldamento') {
+            lines.push(...formatRiscaldamentoEmail());
+        } else {
+            lines.push(...formatAltroEmail());
+        }
+        
+        // Note generali
+        if (info.note) {
+            lines.push('');
+            lines.push('📝 NOTE GENERALI');
+            lines.push('─────────────────────────────────────');
+            lines.push(info.note);
+        }
+        
+        // Foto
+        if (state.photos.length > 0) {
+            lines.push('');
+            lines.push('📸 DOCUMENTAZIONE FOTOGRAFICA');
+            lines.push('─────────────────────────────────────');
+            lines.push(`Numero foto caricate: ${state.photos.length}`);
+            lines.push('(Le foto sono disponibili nel PDF scaricabile)');
+        }
+        
+        lines.push('');
+        lines.push('═══════════════════════════════════════');
+        lines.push('Inviato da Proterco Sopralluoghi App');
+        lines.push('═══════════════════════════════════════');
+        
+        return lines.join('\n');
+    }
+
+    function formatClimaEmail() {
+        const lines = [];
+        const data = state.formData.clima;
+        
+        lines.push('❄️ IMPIANTO DI CLIMATIZZAZIONE');
+        lines.push('─────────────────────────────────────');
+        lines.push(`Tipo intervento: ${data.tipo_intervento === 'sostituzione' ? 'Sostituzione' : 'Nuova installazione'}`);
+        
+        if (data.tipo_intervento === 'nuova') {
+            lines.push(`Tipo impianto: ${data.tipo_impianto === 'monosplit' ? 'Monosplit' : 'Multisplit'}`);
+            
+            if (data.tipo_impianto === 'monosplit') {
+                lines.push(`Distanza tubazioni: ${data.distanza || 'N/D'} metri`);
+                lines.push(`Potenza: ${data.potenza || 'N/D'} BTU/h`);
+            } else if (data.unita && data.unita.length > 0) {
+                lines.push(`Numero unità interne: ${data.numero_unità}`);
+                lines.push('');
+                data.unita.forEach(unita => {
+                    lines.push(`  Unità ${unita.numero}:`);
+                    lines.push(`    - Distanza: ${unita.distanza || 'N/D'} metri`);
+                    lines.push(`    - Potenza: ${unita.potenza || 'N/D'} BTU/h`);
+                });
+            }
+        }
+        
+        if (data.accessori?.length > 0) {
+            lines.push('');
+            lines.push('🔧 Accessori: ' + data.accessori.join(', '));
+        }
+        
+        return lines;
+    }
+
+    function formatRiscaldamentoEmail() {
+        const lines = [];
+        const data = state.formData.riscaldamento;
+        
+        lines.push('🔥 IMPIANTO DI RISCALDAMENTO');
+        lines.push('─────────────────────────────────────');
+        lines.push(`Modello caldaia: ${data.modello}`);
+        lines.push(`Potenza: ${data.potenza_kw} kW`);
+        lines.push(`Kit fumi: ${data.kit_fumi === 'coassiale' ? 'Coassiale' : 'Sdoppiato'}`);
+        
+        if (data.kit_fumi === 'sdoppiato' && data.kit_sdoppiato) {
+            const kit = data.kit_sdoppiato;
+            const components = [];
+            if (parseInt(kit.prolunga) > 0) components.push(`Prolunga 1mt: ${kit.prolunga} pz`);
+            if (parseInt(kit.curva90) > 0) components.push(`Curva 90°: ${kit.curva90} pz`);
+            if (parseInt(kit.curva45) > 0) components.push(`Curva 45°: ${kit.curva45} pz`);
+            if (parseInt(kit.griglia) > 0) components.push(`Griglia: ${kit.griglia} pz`);
+            if (parseInt(kit.alzata) > 0) components.push(`Kit alzata: ${kit.alzata} pz`);
+            
+            if (components.length > 0) {
+                lines.push('');
+                lines.push('📦 Componenti kit sdoppiato:');
+                components.forEach(c => lines.push('  • ' + c));
+            }
+        }
+        
+        if (data.cronotermostato) {
+            lines.push('');
+            lines.push(`🌡️ Cronotermostato Seitron: ${data.cronotermostato}`);
+        }
+        
+        if (data.accessori?.length > 0) {
+            lines.push('');
+            lines.push('🔧 Altri accessori: ' + data.accessori.join(', '));
+        }
+        
+        if (data.note_idrauliche) {
+            lines.push('');
+            lines.push('📝 Note accessori idraulici:');
+            lines.push(data.note_idrauliche);
+        }
+        
+        return lines;
+    }
+
+    function formatAltroEmail() {
+        const lines = [];
+        const data = state.formData.altro;
+        
+        const tipoLabels = {
+            manutenzione: 'Manutenzione ordinaria',
+            riparazione: 'Riparazione guasto',
+            installazione: 'Nuova installazione impianto',
+            modifica: 'Modifica impianto esistente',
+            certificazione: 'Certificazione/Verifica',
+            altro: 'Altro'
+        };
+        
+        lines.push('🔧 ALTRI LAVORI');
+        lines.push('─────────────────────────────────────');
+        lines.push(`Tipo lavoro: ${tipoLabels[data.tipo_lavoro] || data.tipo_lavoro}`);
+        
+        if (data.tempo) {
+            const tempoLabels = {
+                mezza_giornata: 'Mezza giornata (4h)',
+                giornata: 'Giornata intera (8h)',
+                piu_giorni: 'Più giorni',
+                da_valutare: 'Da valutare in sede'
+            };
+            lines.push(`Tempo stimato: ${tempoLabels[data.tempo]}`);
+        }
+        
+        lines.push('');
+        lines.push('📝 Descrizione lavoro:');
+        lines.push(data.descrizione);
+        
+        if (data.materiale) {
+            lines.push('');
+            lines.push('📦 Materiale necessario:');
+            lines.push(data.materiale);
+        }
+        
+        return lines;
+    }
+
+    function showEmailStatus(message, type) {
+        const statusDiv = dom.emailStatus;
+        if (!statusDiv) return;
+        
+        statusDiv.className = `email-status ${type}`;
+        statusDiv.textContent = message;
+        statusDiv.classList.remove('hidden');
+        
+        statusDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showSuccess() {
+        hideLoading();
+        hideAllSections();
+        dom.success.style.display = 'block';
+        dom.success.setAttribute('aria-hidden', 'false');
+        
+        if (state.currentBlobUrl) {
+            URL.revokeObjectURL(state.currentBlobUrl);
+        }
+        
+        localStorage.removeItem('proterco_sopralluogo');
+        state.isDirty = false;
+    }
+
+    // ==================== UTILITIES ====================
+
+    function downloadPDF() {
+        if (!state.generatedPDF) {
+            alert('Nessun PDF disponibile. Genera prima il PDF.');
+            return;
+        }
+        
+        const fileName = `Sopralluogo_${state.formData.anagrafica.nome_cliente}_${state.formData.anagrafica.data}.pdf`
+            .replace(/[^a-z0-9_-]/gi, '_');
+        
+        state.generatedPDF.save(fileName);
+    }
+
+    function resetApp() {
+        if (state.currentBlobUrl) {
+            URL.revokeObjectURL(state.currentBlobUrl);
+        }
+        
+        state.photos = [];
+        state.formData = {};
+        state.generatedPDF = null;
+        state.pdfBlob = null;
+        state.pdfDataUrl = null;
+        state.currentBlobUrl = null;
+        state.isDirty = false;
+        state.emailSent = false;
+        
+        document.querySelectorAll('form').forEach(form => form.reset());
+        document.querySelectorAll('.selected').forEach(el => {
+            el.classList.remove('selected');
+            el.setAttribute('aria-checked', 'false');
+        });
+        document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+        
+        dom.success.style.display = 'none';
+        dom.success.setAttribute('aria-hidden', 'true');
+        dom.emailStatus?.classList.add('hidden');
+        
+        if (dom.pdfContainer) dom.pdfContainer.innerHTML = '';
+        if (dom.unitContainer) dom.unitContainer.innerHTML = '';
+        
+        const btn = dom.sendEmailBtn;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span aria-hidden="true">✉️</span> Invia Rapporto via Email';
+        }
+        
+        ['nuova-installazione-details', 'multisplit-details', 'monosplit-details', 
+         'kit-sdoppiato-details', 'cronotermostato-options'].forEach(id => {
+            document.getElementById(id)?.classList.add('hidden');
+        });
+        
+        backToHome();
+    }
+
+    function showLoading(text) {
+        const loadingText = document.getElementById('loading-text');
+        if (loadingText) loadingText.textContent = text;
+        
+        dom.loading.style.display = 'flex';
+        dom.loading.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideLoading() {
+        dom.loading.style.display = 'none';
+        dom.loading.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    function showPrivacyInfo(e) {
+        e.preventDefault();
+        alert('Informativa Privacy Proterco Italia s.r.l.\n\n' +
+              'I dati personali forniti saranno trattati nel rispetto del Regolamento UE 2016/679 (GDPR) ' +
+              'esclusivamente per finalità di gestione del sopralluogo tecnico e dell\'eventuale ' +
+              'contratto di installazione/manutenzione.\n\n' +
+              'Titolare del trattamento: Proterco Italia s.r.l.\n' +
+              'Indirizzo: Via Due Pini, 23 - 00042 Anzio (RM)\n' +
+              'Email: protercoitalia@gmail.com');
+    }
+
+    function saveFormData() {
+        try {
+            const dataToSave = {
+                currentType: state.currentType,
+                formData: state.formData,
+                photos: state.photos.slice(0, 5),
+                timestamp: Date.now()
+            };
+            localStorage.setItem('proterco_sopralluogo', JSON.stringify(dataToSave));
+            
+            const indicator = dom.autosaveIndicator;
+            if (indicator) {
+                indicator.classList.add('visible');
+                setTimeout(() => indicator.classList.remove('visible'), 2000);
+            }
+        } catch (e) {
+            console.warn('Autosave fallito:', e);
+        }
+    }
+
+    function loadSavedData() {
+        try {
+            const saved = localStorage.getItem('proterco_sopralluogo');
+            if (!saved) return;
+            
+            const data = JSON.parse(saved);
+            const age = Date.now() - (data.timestamp || 0);
+            
+            if (age > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('proterco_sopralluogo');
+                return;
+            }
+            
+            if (confirm('Trovato un sopralluogo in corso. Vuoi ripristinarlo?')) {
+                state.currentType = data.currentType;
+                state.formData = data.formData || {};
+                state.photos = data.photos || [];
+            } else {
+                localStorage.removeItem('proterco_sopralluogo');
+            }
+        } catch (e) {
+            console.warn('Caricamento dati fallito:', e);
+        }
+    }
+
+    function setDefaultDate() {
+        const dateInput = document.getElementById('data_sopralluogo');
+        if (dateInput && !dateInput.value) {
+            dateInput.valueAsDate = new Date();
+        }
+    }
+
+    function handleBeforeUnload(e) {
+        if (state.isDirty && state.currentStep < 5) {
+            e.preventDefault();
+            e.returnValue = 'Hai dati non salvati. Sei sicuro di voler uscire?';
+            return e.returnValue;
+        }
+    }
+
+    // API pubblica
+    return {
+        init,
+        selectType,
+        backToHome,
+        goToAnagrafica,
+        backToForm,
+        goToPhotos,
+        backToAnagrafica,
+        backToPhotos,
+        toggleSelection,
+        changeQty,
+        addPhoto,
+        handlePhoto,
+        removePhoto,
+        generatePDF,
+        sendEmail,
+        downloadPDF,
+        resetApp,
+        showPrivacyInfo
+    };
+})();
+
+// Inizializza EmailJS
+document.addEventListener('DOMContentLoaded', () => {
+    emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+    app.init();
+});
+</script>
+
+</body>
+</html>
